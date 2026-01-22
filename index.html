@@ -1223,13 +1223,13 @@
             showLoading('Loading recent query executions...');
             
             try {
-                // Fetch recent query_executions (limit to prevent timeout)
+                // Fetch recent query_executions (limit to prevent Netlify function timeout)
                 const allQueryExecutions = await apiCall('get-by', {
                     tableName: 'queries_execution',
                     is_deleted: 0,
                     orderBy: 'id',
                     order: 'desc',
-                    limit: 2000
+                    limit: 500
                 });
                 
                 if (!allQueryExecutions || allQueryExecutions.length === 0) {
