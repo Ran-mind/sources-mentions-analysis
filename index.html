@@ -727,13 +727,6 @@
                         <canvas id="scatterChart"></canvas>
                     </div>
                 </div>
-                
-                <div class="chart-container">
-                    <h3 class="chart-title">Response Mentions Breakdown</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="pieChart"></canvas>
-                    </div>
-                </div>
             </div>
             
             <!-- Data Table -->
@@ -1514,15 +1507,10 @@
         }
         
         function renderFindings() {
-            const multiplierSources = (summary.avg_sources_when_mentioned / summary.avg_sources_when_not_mentioned).toFixed(1);
             const multiplierBrandSources = (summary.avg_brand_sources_when_mentioned / summary.avg_brand_sources_when_not_mentioned).toFixed(1);
             const multiplierPct = (summary.avg_brand_pct_when_mentioned / summary.avg_brand_pct_when_not_mentioned).toFixed(1);
             
             const findings = [
-                {
-                    icon: '📈',
-                    text: `When brand IS mentioned in response, there are <strong>${multiplierSources}x more sources</strong> on average (${summary.avg_sources_when_mentioned.toFixed(1)} vs ${summary.avg_sources_when_not_mentioned.toFixed(1)})`
-                },
                 {
                     icon: '🎯',
                     text: `When brand IS mentioned in response, <strong>${multiplierBrandSources}x more sources cite the brand</strong> (${summary.avg_brand_sources_when_mentioned.toFixed(1)} vs ${summary.avg_brand_sources_when_not_mentioned.toFixed(1)})`
@@ -1623,30 +1611,6 @@
             
             // Render distribution chart (scatter or bar based on current view)
             renderDistributionChart();
-            
-            // Pie chart
-            chartInstances.pie = new Chart(document.getElementById('pieChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Brand in Response', 'Brand NOT in Response'],
-                    datasets: [{
-                        data: [summary.records_with_brand_in_response, summary.records_without_brand_in_response],
-                        backgroundColor: ['rgba(0, 255, 136, 0.7)', 'rgba(255, 136, 68, 0.7)'],
-                        borderColor: ['#00ff88', '#ff8844'],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#8888aa' }
-                        }
-                    }
-                }
-            });
         }
         
         function renderTable() {
@@ -1835,7 +1799,7 @@
                     <span class="${s.is_customer_mentioned ? 'mentioned' : 'not-mentioned'}">
                         ${s.is_customer_mentioned ? '✓' : '✗'}
                     </span>
-                    <a href="${s.url}" target="_blank" class="source-url">${s.domain || s.url}</a>
+                    <a href="${s.url}" target="_blank" class="source-url">${s.url || 'No URL'}</a>
                 </div>
             `).join('');
             
