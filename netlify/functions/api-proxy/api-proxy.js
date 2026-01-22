@@ -20,13 +20,25 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
 
-  // Extract endpoint from path: /api/get-by -> /tables/get-by/
-  const pathParts = event.path.replace('/api/', '').replace(/\/$/, '');
+  // Extract endpoint from rawUrl or path
+  // rawUrl contains the original request URL before redirect
+  let originalPath = event.path;
+  if (event.rawUrl) {
+    const url = new URL(event.rawUrl);
+    originalPath = url.pathname;
+  }
+  
+  // Convert /api/get-by-id/ -> /tables/get-by-id/
+  const pathParts = originalPath.replace('/api/', '').replace(/\/$/, '');
   const endpoint = `/tables/${pathParts}/`;
+  
+  console.log('Original path:', originalPath);
+  console.log('Endpoint:', endpoint);
 
   return new Promise((resolve) => {
     const options = {
