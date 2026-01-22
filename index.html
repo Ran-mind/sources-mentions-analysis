@@ -597,7 +597,7 @@
                 <p style="color: var(--text-secondary); margin-bottom: 1rem;">Choose data source:</p>
                 <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
                     <button id="lastExecutionsBtn" onclick="loadLastExecutions()" style="background: var(--accent-blue); border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-                        📊 Last 100 Executions
+                        📊 Load Recent Data
                     </button>
                     <span style="color: var(--text-secondary);">or</span>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -1216,20 +1216,20 @@
             document.getElementById('content').style.display = 'block';
         }
         
-        // Load last 5000 query executions (covering roughly 100 executions)
+        // Load recent query executions
         async function loadLastExecutions() {
             const customerInfo = document.getElementById('customerInfo');
             customerInfo.innerHTML = '';
             showLoading('Loading recent query executions...');
             
             try {
-                // Fetch last 5000 query_executions directly
+                // Fetch recent query_executions (limit to prevent timeout)
                 const allQueryExecutions = await apiCall('get-by', {
                     tableName: 'queries_execution',
                     is_deleted: 0,
                     orderBy: 'id',
                     order: 'desc',
-                    limit: 5000
+                    limit: 2000
                 });
                 
                 if (!allQueryExecutions || allQueryExecutions.length === 0) {
