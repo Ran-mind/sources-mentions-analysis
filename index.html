@@ -1596,7 +1596,11 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: { color: '#8888aa' }
+                        }
                     },
                     scales: {
                         x: { ticks: { color: '#8888aa' }, grid: { color: '#2a2a3a' } },
