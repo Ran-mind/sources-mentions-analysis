@@ -106,7 +106,15 @@
         .stat-label {
             color: var(--text-secondary);
             font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-sublabel {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            opacity: 0.7;
             margin-bottom: 0.5rem;
+            font-style: italic;
         }
         
         .stat-value {
@@ -1342,53 +1350,53 @@
         }
         
         function renderStats() {
+            const mentionedPct = summary.total_records > 0 
+                ? (summary.records_with_brand_in_response / summary.total_records * 100).toFixed(1)
+                : 0;
+            
             const stats = [
                 {
-                    label: 'Total Records (with sources)',
+                    label: 'Total Queries (with sources)',
                     value: summary.total_records.toLocaleString(),
-                    color: 'blue',
-                    comparison: 'Excludes records without sources'
+                    color: 'blue'
                 },
                 {
-                    label: 'Brand in Response',
-                    value: summary.records_with_brand_in_response.toLocaleString(),
-                    color: 'green',
-                    comparison: `${(summary.records_with_brand_in_response / summary.total_records * 100).toFixed(1)}% of total`
+                    label: 'Customer Mentioned in Response',
+                    value: mentionedPct + '%',
+                    color: 'green'
                 },
                 {
-                    label: 'Avg # Sources with Brand (Mentioned)',
+                    label: 'Avg # Sources Mentioning Brand',
+                    sublabel: 'When brand IS in response',
                     value: summary.avg_brand_sources_when_mentioned.toFixed(1),
-                    color: 'green',
-                    comparison: `<span class="multiplier">${(summary.avg_brand_sources_when_mentioned / summary.avg_brand_sources_when_not_mentioned).toFixed(1)}x</span> more than when not mentioned`,
-                    highlight: true
+                    color: 'green'
                 },
                 {
-                    label: 'Avg # Sources with Brand (Not Mentioned)',
-                    value: summary.avg_brand_sources_when_not_mentioned.toFixed(1),
-                    color: 'orange',
-                    comparison: null
-                },
-                {
-                    label: 'Avg Brand Source % (Mentioned)',
+                    label: 'Avg % Sources Mentioning Brand',
+                    sublabel: 'When brand IS in response',
                     value: summary.avg_brand_pct_when_mentioned.toFixed(1) + '%',
-                    color: 'green',
-                    comparison: `<span class="multiplier">${(summary.avg_brand_pct_when_mentioned / summary.avg_brand_pct_when_not_mentioned).toFixed(1)}x</span> higher than when not mentioned`,
-                    highlight: true
+                    color: 'green'
                 },
                 {
-                    label: 'Avg Brand Source % (Not Mentioned)',
+                    label: 'Avg # Sources Mentioning Brand',
+                    sublabel: 'When brand is NOT in response',
+                    value: summary.avg_brand_sources_when_not_mentioned.toFixed(1),
+                    color: 'orange'
+                },
+                {
+                    label: 'Avg % Sources Mentioning Brand',
+                    sublabel: 'When brand is NOT in response',
                     value: summary.avg_brand_pct_when_not_mentioned.toFixed(1) + '%',
-                    color: 'orange',
-                    comparison: null
+                    color: 'orange'
                 }
             ];
             
             const grid = document.getElementById('statsGrid');
             grid.innerHTML = stats.map(stat => `
-                <div class="stat-card ${stat.highlight ? 'highlight' : ''}">
+                <div class="stat-card">
                     <div class="stat-label">${stat.label}</div>
+                    ${stat.sublabel ? `<div class="stat-sublabel">${stat.sublabel}</div>` : ''}
                     <div class="stat-value ${stat.color}">${stat.value}</div>
-                    ${stat.comparison ? `<div class="stat-comparison">${stat.comparison}</div>` : ''}
                 </div>
             `).join('');
         }
