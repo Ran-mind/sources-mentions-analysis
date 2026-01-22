@@ -40,13 +40,13 @@ class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         path_without_query = self.path.split('?')[0]
         
-        if path_without_query == '/' or path_without_query == '/index.html':
-            path_without_query = '/visualization.html'
+        if path_without_query == '/':
+            path_without_query = '/index.html'
         
         try:
             file_path = os.path.join(os.getcwd(), path_without_query.lstrip('/'))
             if os.path.isdir(file_path):
-                file_path = os.path.join(file_path, 'visualization.html')
+                file_path = os.path.join(file_path, 'index.html')
             
             if not os.path.exists(file_path) or not os.path.isfile(file_path):
                 self.send_error(404, "File not found")
