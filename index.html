@@ -444,9 +444,18 @@
         
         /* Loading state */
         .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             padding: 3rem;
             color: var(--text-secondary);
+            min-height: 200px;
+        }
+        
+        #content {
+            display: none;
         }
         
         .loading-spinner {
@@ -606,7 +615,7 @@
             <p style="font-size: 1.2rem; color: var(--text-secondary);">👆 Select a data source above to begin analysis</p>
         </div>
         
-        <div id="content" style="display: none;">
+        <div id="content">
             <!-- Summary Stats -->
             <div class="stats-grid" id="statsGrid"></div>
             
@@ -888,8 +897,7 @@
                 groupByExecution();
                 
                 // Show content
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
+                showContent();
                 
                 // Re-render everything
                 renderStats();
@@ -1192,60 +1200,39 @@
         
         // Show loading state
         function showLoading(message = 'Loading data...') {
-            document.getElementById('loading').innerHTML = `
+            const loadingEl = document.getElementById('loading');
+            const contentEl = document.getElementById('content');
+            loadingEl.innerHTML = `
                 <div class="loading-spinner"></div>
                 <p>${message}</p>
             `;
-            document.getElementById('loading').style.display = 'flex';
-            document.getElementById('content').style.display = 'none';
+            loadingEl.style.display = 'flex';
+            contentEl.style.display = 'none';
         }
         
-        // Load last 100 completed executions
+        // Show content
+        function showContent() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+        
+        // Load last 5000 query executions (covering roughly 100 executions)
         async function loadLastExecutions() {
             const customerInfo = document.getElementById('customerInfo');
             customerInfo.innerHTML = '';
-            showLoading('Loading last 100 executions...');
+            showLoading('Loading recent query executions...');
             
             try {
-                // Step 1: Get last 100 completed executions
-                const executions = await apiCall('get-by', {
-                    tableName: 'v_executions',
-                    status: 'completed',
+                // Fetch last 5000 query_executions directly
+                const allQueryExecutions = await apiCall('get-by', {
+                    tableName: 'queries_execution',
+                    is_deleted: 0,
                     orderBy: 'id',
                     order: 'desc',
-                    limit: 100
+                    limit: 5000
                 });
                 
-                if (!executions || executions.length === 0) {
-                    document.getElementById('loading').innerHTML = `
-                        <p style="color: var(--accent-red);">No completed executions found</p>
-                    `;
-                    return;
-                }
-                
-                // Step 2: Get query_executions for these executions
-                const executionIds = executions.map(e => e.id);
-                let allQueryExecutions = [];
-                
-                // Fetch in batches to avoid timeout
-                for (let i = 0; i < executionIds.length; i += 10) {
-                    const batch = executionIds.slice(i, i + 10);
-                    showLoading(`Loading executions ${i + 1}-${Math.min(i + 10, executionIds.length)} of ${executionIds.length}...`);
-                    
-                    for (const execId of batch) {
-                        const qes = await apiCall('get-by', {
-                            tableName: 'queries_execution',
-                            execution_id: execId,
-                            is_deleted: 0,
-                            limit: 1000
-                        });
-                        if (qes && qes.length > 0) {
-                            allQueryExecutions = allQueryExecutions.concat(qes);
-                        }
-                    }
-                }
-                
-                if (allQueryExecutions.length === 0) {
+                if (!allQueryExecutions || allQueryExecutions.length === 0) {
                     document.getElementById('loading').innerHTML = `
                         <p style="color: var(--accent-orange);">No query executions found</p>
                     `;
@@ -1298,8 +1285,7 @@
                 groupByExecution();
                 
                 // Show content
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
+                showContent();
                 
                 // Render everything
                 renderStats();
@@ -1307,7 +1293,9 @@
                 renderCharts();
                 renderTable();
                 
-                customerInfo.innerHTML = `<span style="color: var(--accent-blue);">✓ Loaded last ${executionIds.length} executions (${processedData.length} records with sources)</span>`;
+                // Count unique executions
+                const uniqueExecutions = new Set(processedData.map(r => r.execution_id)).size;
+                customerInfo.innerHTML = `<span style="color: var(--accent-blue);">✓ Loaded ${processedData.length} records from ${uniqueExecutions} executions</span>`;
                 document.getElementById('totalRecords').textContent = summary.total_records.toLocaleString();
                 document.getElementById('dataDate').textContent = new Date().toLocaleDateString();
                 
