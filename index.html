@@ -1223,10 +1223,9 @@
             showLoading('Fetching last 100 completed executions...');
             
             try {
-                // Step 1: Get last 100 completed executions
+                // Step 1: Get last 100 executions (most recent by ID)
                 const executions = await apiCall('get-by', {
                     tableName: 'executions',
-                    status: 'completed',
                     is_deleted: 0,
                     orderBy: 'id',
                     order: 'desc',
@@ -1235,7 +1234,7 @@
                 
                 if (!executions || executions.length === 0) {
                     document.getElementById('loading').innerHTML = `
-                        <p style="color: var(--accent-orange);">No completed executions found</p>
+                        <p style="color: var(--accent-orange);">No executions found</p>
                     `;
                     return;
                 }
