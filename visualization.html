@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Source Mentions vs Response Mentions - Research</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --accent-green: #00ff88;
+            --accent-blue: #00aaff;
+            --accent-purple: #aa55ff;
+            --accent-red: #ff4466;
+            --accent-orange: #ff8844;
+            --text-primary: #ffffff;
+            --text-secondary: #8888aa;
+            --border-color: #2a2a3a;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        .research-question {
+            background: var(--bg-tertiary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            border-left: 4px solid var(--accent-purple);
+        }
+        
+        .research-question h3 {
+            color: var(--accent-purple);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-blue);
+        }
+        
+        .stat-card.highlight {
+            border-color: var(--accent-green);
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, var(--bg-secondary) 100%);
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.blue { color: var(--accent-blue); }
+        .stat-value.purple { color: var(--accent-purple); }
+        .stat-value.orange { color: var(--accent-orange); }
+        
+        .stat-comparison {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        
+        .stat-comparison .multiplier {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+        
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .chart-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Key Findings */
+        .findings-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .findings-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .finding-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+        
+        .finding-icon {
+            font-size: 1.5rem;
+        }
+        
+        .finding-text {
+            flex: 1;
+        }
+        
+        .finding-text strong {
+            color: var(--accent-green);
+        }
+        
+        /* Data Table Section */
+        .table-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .table-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .table-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .search-input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            min-width: 250px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        .filter-select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            cursor: pointer;
+        }
+        
+        .data-table-wrapper {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .data-table th {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .data-table th:hover {
+            color: var(--accent-blue);
+        }
+        
+        .data-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .data-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-yes {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent-green);
+        }
+        
+        .badge-no {
+            background: rgba(255, 68, 102, 0.15);
+            color: var(--accent-red);
+        }
+        
+        .percentage-bar {
+            width: 100px;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .percentage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            border-radius: 4px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .pagination button {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination .page-info {
+            color: var(--text-secondary);
+            padding: 0 1rem;
+        }
+        
+        /* Source Details Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            font-size: 1.2rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-close:hover {
+            color: var(--accent-red);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .source-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .source-item .mentioned {
+            color: var(--accent-green);
+        }
+        
+        .source-item .not-mentioned {
+            color: var(--accent-red);
+        }
+        
+        .source-url {
+            color: var(--accent-blue);
+            text-decoration: none;
+            word-break: break-all;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+        
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .view-sources-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--accent-blue);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: inherit;
+        }
+        
+        .view-sources-btn:hover {
+            background: var(--accent-blue);
+            color: var(--bg-primary);
+        }
+        
+        .view-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        
+        .view-toggle:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+        
+        .view-toggle.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: var(--bg-primary);
+        }
+        
+        .execution-row {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .execution-row:hover {
+            background: var(--bg-tertiary) !important;
+        }
+        
+        .execution-row.expanded {
+            background: rgba(0, 170, 255, 0.1) !important;
+        }
+        
+        .query-executions-row {
+            background: var(--bg-tertiary);
+        }
+        
+        .query-executions-row td {
+            padding: 0 !important;
+        }
+        
+        .query-executions-container {
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .query-execution-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .query-execution-item .query-id {
+            color: var(--text-secondary);
+            min-width: 80px;
+        }
+        
+        .query-execution-item .brand-status {
+            min-width: 100px;
+        }
+        
+        .query-execution-item .sources-info {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .customer-loading {
+            color: var(--accent-blue);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 Source Mentions Research</h1>
+            <p class="subtitle">Correlation Analysis: Do more source citations improve brand mention chances?</p>
+            
+            <div class="research-question">
+                <h3>Research Question</h3>
+                <p>Is there a correlation between the number/percentage of query sources (citations) where the brand is mentioned and whether the brand was mentioned in the query response?</p>
+            </div>
+            
+            <div class="customer-lookup" style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <label for="customerIdInput" style="color: var(--text-secondary);">Customer ID:</label>
+                    <input type="number" id="customerIdInput" class="search-input" placeholder="Enter Customer ID" style="width: 150px;">
+                    <button id="loadCustomerBtn" onclick="loadCustomerData()" style="background: var(--accent-purple); border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600;">
+                        Load Customer Data
+                    </button>
+                </div>
+                <div id="customerInfo" style="color: var(--accent-green); font-weight: 500;"></div>
+            </div>
+        </header>
+        
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading data...</p>
+        </div>
+        
+        <div id="content" style="display: none;">
+            <!-- Summary Stats -->
+            <div class="stats-grid" id="statsGrid"></div>
+            
+            <!-- Key Findings -->
+            <div class="findings-section">
+                <h2>🎯 Key Findings</h2>
+                <div id="findings"></div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h3 class="chart-title">Average Sources Comparison</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="sourcesChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 class="chart-title">Brand Mention % in Sources</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="percentageChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <h3 class="chart-title" style="margin: 0;">Distribution: Brand Mention % vs Brand in Response</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="scatterViewBtn" class="view-toggle active" onclick="setDistributionView('scatter')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">% Scatter</button>
+                            <button id="countScatterBtn" class="view-toggle" onclick="setDistributionView('countScatter')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;"># Count Scatter</button>
+                            <button id="barViewBtn" class="view-toggle" onclick="setDistributionView('bar')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Bar Chart</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 class="chart-title">Response Mentions Breakdown</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Table -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>📊 Raw Data (Verify the Analysis)</h2>
+                    <div class="table-controls">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search by ID, query group...">
+                        <select class="filter-select" id="filterSelect">
+                            <option value="all">All Records</option>
+                            <option value="mentioned">Brand in Response</option>
+                            <option value="not_mentioned">Brand NOT in Response</option>
+                            <option value="has_sources">Has Sources</option>
+                            <option value="high_percentage">High Source % (>30%)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- View Toggle -->
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <button id="viewRecordsBtn" class="view-toggle active" onclick="setViewMode('records')">View by Records</button>
+                    <button id="viewExecutionsBtn" class="view-toggle" onclick="setViewMode('executions')">View by Executions</button>
+                </div>
+                
+                <div class="data-table-wrapper">
+                    <table class="data-table" id="dataTable">
+                        <thead id="tableHead">
+                            <tr>
+                                <th onclick="sortTable('id')">ID ↕</th>
+                                <th onclick="sortTable('query_group_id')">Query Group ↕</th>
+                                <th onclick="sortTable('execution_id')">Execution ↕</th>
+                                <th onclick="sortTable('brand_in_response')">Brand in Response ↕</th>
+                                <th onclick="sortTable('total_sources')">Total Sources ↕</th>
+                                <th onclick="sortTable('sources_with_brand')">Sources with Brand ↕</th>
+                                <th onclick="sortTable('brand_mention_percentage')">Brand % ↕</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination">
+                    <button id="prevBtn" onclick="prevPage()">← Previous</button>
+                    <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                    <button id="nextBtn" onclick="nextPage()">Next →</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Research conducted on <span id="dataDate"></span> • Total records: <span id="totalRecords"></span></p>
+        </footer>
+    </div>
+    
+    <!-- Source Details Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Source Details - Record #<span id="modalRecordId"></span></h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+    
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let summary = {};
+        let currentPage = 1;
+        const pageSize = 50;
+        let sortColumn = 'id';
+        let sortDirection = 'desc';
+        let viewMode = 'records'; // 'records' or 'executions'
+        let executionGroups = {}; // Grouped by execution_id
+        let expandedExecutions = new Set();
+        let currentCustomerId = null;
+        let chartInstances = {}; // Store chart instances for cleanup
+        let distributionView = 'scatter'; // 'scatter' or 'bar'
+        
+        // API Configuration
+        // Use the server's API proxy (handles CORS)
+        const API_BASE_URL = '/api';
+        
+        // API call helper
+        async function apiCall(endpoint, body) {
+            const response = await fetch(`${API_BASE_URL}/${endpoint}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const result = await response.json();
+            return result.data || result;
+        }
+        
+        // Parse resources JSON
+        function parseResources(resourcesRaw) {
+            if (!resourcesRaw) return [];
+            try {
+                const parsed = typeof resourcesRaw === 'string' ? JSON.parse(resourcesRaw) : resourcesRaw;
+                if (parsed && parsed.resources && Array.isArray(parsed.resources)) {
+                    return parsed.resources;
+                }
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+        
+        // Load customer data by ID
+        async function loadCustomerData() {
+            const customerIdInput = document.getElementById('customerIdInput');
+            const customerId = parseInt(customerIdInput.value);
+            
+            if (!customerId || isNaN(customerId)) {
+                alert('Please enter a valid Customer ID');
+                return;
+            }
+            
+            const customerInfo = document.getElementById('customerInfo');
+            customerInfo.innerHTML = '<span class="customer-loading">Loading customer data...</span>';
+            
+            try {
+                // Step 1: Get customer info
+                console.log('Fetching customer:', customerId);
+                const customer = await apiCall('get-by-id', { tableName: 'v_customers', id: customerId });
+                console.log('Customer result:', customer);
+                
+                if (!customer || customer.message || !customer.id) {
+                    customerInfo.innerHTML = `<span style="color: var(--accent-red);">Customer ${customerId} not found</span>`;
+                    return;
+                }
+                
+                const customerName = customer.name || customer.customer_name || `Customer ${customerId}`;
+                
+                // Step 2: Get customer's query groups
+                console.log('Fetching query groups for customer:', customerId);
+                const queryGroupRels = await apiCall('get-by', { 
+                    tableName: 'v_rel_customer_query_group', 
+                    customer_id: customerId 
+                });
+                console.log('Query group relations:', queryGroupRels);
+                
+                if (!queryGroupRels || queryGroupRels.length === 0) {
+                    customerInfo.innerHTML = `<span style="color: var(--accent-orange);">No query groups found for ${customerName}</span>`;
+                    return;
+                }
+                
+                // Step 3: Get latest execution for each query group
+                let latestExecutionId = null;
+                let latestExecutionDate = null;
+                
+                for (const rel of queryGroupRels) {
+                    const execRels = await apiCall('get-by', {
+                        tableName: 'v_rel_query_group_execution',
+                        query_group_id: rel.query_group_id,
+                        orderBy: 'id',
+                        order: 'desc',
+                        limit: 1
+                    });
+                    
+                    if (execRels && execRels.length > 0) {
+                        const exec = await apiCall('get-by-id', { tableName: 'v_executions', id: execRels[0].execution_id });
+                        if (exec && exec.create_date) {
+                            const execDate = new Date(exec.create_date);
+                            if (!latestExecutionDate || execDate > latestExecutionDate) {
+                                latestExecutionDate = execDate;
+                                latestExecutionId = exec.id;
+                            }
+                        }
+                    }
+                }
+                
+                if (!latestExecutionId) {
+                    customerInfo.innerHTML = `<span style="color: var(--accent-orange);">No executions found for ${customerName}</span>`;
+                    return;
+                }
+                
+                // Step 4: Get all query_executions for this execution
+                const queryExecutions = await apiCall('get-by', {
+                    tableName: 'queries_execution',
+                    execution_id: latestExecutionId,
+                    is_deleted: 0,
+                    limit: 5000
+                });
+                
+                if (!queryExecutions || queryExecutions.length === 0) {
+                    customerInfo.innerHTML = `<span style="color: var(--accent-orange);">No query executions found for execution ${latestExecutionId}</span>`;
+                    return;
+                }
+                
+                // Step 5: Process data (filter records with sources and calculate metrics)
+                const processedData = [];
+                for (const qe of queryExecutions) {
+                    const resources = parseResources(qe.resources);
+                    if (resources.length === 0) continue;
+                    
+                    const sourcesWithBrand = resources.filter(r => r.is_customer_mentioned === true).length;
+                    const brandPct = resources.length > 0 ? (sourcesWithBrand / resources.length) * 100 : 0;
+                    
+                    processedData.push({
+                        id: qe.id,
+                        query_id: qe.query_id,
+                        query_group_id: qe.query_group_id,
+                        execution_id: qe.execution_id,
+                        brand_in_response: qe.product_in_results === 1 || qe.product_in_results === true,
+                        total_sources: resources.length,
+                        sources_with_brand: sourcesWithBrand,
+                        brand_mention_percentage: brandPct,
+                        sources_summary: resources.map(r => ({
+                            url: r.url || '',
+                            domain: r.Domain || '',
+                            is_customer_mentioned: r.is_customer_mentioned || false
+                        }))
+                    });
+                }
+                
+                if (processedData.length === 0) {
+                    customerInfo.innerHTML = `<span style="color: var(--accent-orange);">No records with sources found</span>`;
+                    return;
+                }
+                
+                // Update global data
+                allData = processedData;
+                filteredData = [...allData];
+                currentCustomerId = customerId;
+                
+                // Recalculate summary
+                summary = calculateSummary(processedData);
+                
+                // Group by execution
+                groupByExecution();
+                
+                // Re-render everything
+                renderStats();
+                renderFindings();
+                renderCharts();
+                renderTable();
+                
+                customerInfo.innerHTML = `<span style="color: var(--accent-green);">✓ Loaded ${customerName} - Execution #${latestExecutionId} (${processedData.length} records with sources)</span>`;
+                document.getElementById('totalRecords').textContent = summary.total_records.toLocaleString();
+                
+            } catch (error) {
+                console.error('Error loading customer data:', error);
+                if (error.message === 'Failed to fetch') {
+                    customerInfo.innerHTML = `<span style="color: var(--accent-red);">Connection Error: Make sure the server is running (python3 server.py)</span>`;
+                } else {
+                    customerInfo.innerHTML = `<span style="color: var(--accent-red);">Error: ${error.message}</span>`;
+                }
+            }
+        }
+        
+        // Calculate summary from data
+        function calculateSummary(data) {
+            const total = data.length;
+            const mentioned = data.filter(r => r.brand_in_response);
+            const notMentioned = data.filter(r => !r.brand_in_response);
+            
+            return {
+                total_records: total,
+                records_with_brand_in_response: mentioned.length,
+                records_without_brand_in_response: notMentioned.length,
+                avg_sources_when_mentioned: mentioned.length > 0 ? mentioned.reduce((sum, r) => sum + r.total_sources, 0) / mentioned.length : 0,
+                avg_sources_when_not_mentioned: notMentioned.length > 0 ? notMentioned.reduce((sum, r) => sum + r.total_sources, 0) / notMentioned.length : 0,
+                avg_brand_sources_when_mentioned: mentioned.length > 0 ? mentioned.reduce((sum, r) => sum + r.sources_with_brand, 0) / mentioned.length : 0,
+                avg_brand_sources_when_not_mentioned: notMentioned.length > 0 ? notMentioned.reduce((sum, r) => sum + r.sources_with_brand, 0) / notMentioned.length : 0,
+                avg_brand_pct_when_mentioned: mentioned.length > 0 ? mentioned.reduce((sum, r) => sum + r.brand_mention_percentage, 0) / mentioned.length : 0,
+                avg_brand_pct_when_not_mentioned: notMentioned.length > 0 ? notMentioned.reduce((sum, r) => sum + r.brand_mention_percentage, 0) / notMentioned.length : 0
+            };
+        }
+        
+        // Group data by execution_id
+        function groupByExecution() {
+            executionGroups = {};
+            for (const record of allData) {
+                const execId = record.execution_id;
+                if (!executionGroups[execId]) {
+                    executionGroups[execId] = {
+                        execution_id: execId,
+                        query_group_id: record.query_group_id,
+                        records: [],
+                        total_queries: 0,
+                        queries_with_brand: 0,
+                        total_sources: 0,
+                        sources_with_brand: 0
+                    };
+                }
+                executionGroups[execId].records.push(record);
+                executionGroups[execId].total_queries++;
+                if (record.brand_in_response) executionGroups[execId].queries_with_brand++;
+                executionGroups[execId].total_sources += record.total_sources;
+                executionGroups[execId].sources_with_brand += record.sources_with_brand;
+            }
+        }
+        
+        // Set view mode
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('viewRecordsBtn').classList.toggle('active', mode === 'records');
+            document.getElementById('viewExecutionsBtn').classList.toggle('active', mode === 'executions');
+            expandedExecutions.clear();
+            currentPage = 1;
+            renderTable();
+        }
+        
+        // Toggle execution details
+        function toggleExecution(execId) {
+            if (expandedExecutions.has(execId)) {
+                expandedExecutions.delete(execId);
+            } else {
+                expandedExecutions.add(execId);
+            }
+            renderTable();
+        }
+        
+        // Set distribution chart view
+        function setDistributionView(view) {
+            distributionView = view;
+            document.getElementById('scatterViewBtn').classList.toggle('active', view === 'scatter');
+            document.getElementById('countScatterBtn').classList.toggle('active', view === 'countScatter');
+            document.getElementById('barViewBtn').classList.toggle('active', view === 'bar');
+            renderDistributionChart();
+        }
+        
+        // Render distribution chart (scatter or bar)
+        function renderDistributionChart() {
+            // Destroy existing scatter chart
+            if (chartInstances.scatter) {
+                chartInstances.scatter.destroy();
+            }
+            
+            const canvas = document.getElementById('scatterChart');
+            
+            if (distributionView === 'bar') {
+                // Bar chart: group by brand mention % ranges
+                const ranges = [
+                    { min: 0, max: 10, label: '0-10%' },
+                    { min: 10, max: 20, label: '10-20%' },
+                    { min: 20, max: 30, label: '20-30%' },
+                    { min: 30, max: 40, label: '30-40%' },
+                    { min: 40, max: 50, label: '40-50%' },
+                    { min: 50, max: 60, label: '50-60%' },
+                    { min: 60, max: 70, label: '60-70%' },
+                    { min: 70, max: 80, label: '70-80%' },
+                    { min: 80, max: 90, label: '80-90%' },
+                    { min: 90, max: 101, label: '90-100%' }
+                ];
+                
+                const mentionedCounts = ranges.map(() => 0);
+                const notMentionedCounts = ranges.map(() => 0);
+                
+                allData.forEach(d => {
+                    const pct = d.brand_mention_percentage || 0;
+                    const rangeIdx = ranges.findIndex(r => pct >= r.min && pct < r.max);
+                    if (rangeIdx >= 0) {
+                        if (d.brand_in_response) {
+                            mentionedCounts[rangeIdx]++;
+                        } else {
+                            notMentionedCounts[rangeIdx]++;
+                        }
+                    }
+                });
+                
+                chartInstances.scatter = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: ranges.map(r => r.label),
+                        datasets: [
+                            {
+                                label: 'Brand in Response',
+                                data: mentionedCounts,
+                                backgroundColor: 'rgba(0, 255, 136, 0.7)',
+                                borderColor: 'rgba(0, 255, 136, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Brand NOT in Response',
+                                data: notMentionedCounts,
+                                backgroundColor: 'rgba(255, 136, 68, 0.7)',
+                                borderColor: 'rgba(255, 136, 68, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                labels: { color: '#ccccdd' }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                title: { display: true, text: 'Brand Mention % in Sources', color: '#8888aa' },
+                                ticks: { color: '#8888aa' }, 
+                                grid: { color: '#2a2a3a' }
+                            },
+                            y: { 
+                                title: { display: true, text: 'Number of Records', color: '#8888aa' },
+                                ticks: { color: '#8888aa' }, 
+                                grid: { color: '#2a2a3a' }
+                            }
+                        }
+                    }
+                });
+            } else if (distributionView === 'countScatter') {
+                // Count scatter - shows ABSOLUTE NUMBER of sources with brand (the 2.9x difference)
+                const scatterData = allData.slice(0, 500).map(d => {
+                    const jitter = Math.random() * 0.8;
+                    const y = d.brand_in_response ? 1.1 + jitter : 0.1 + jitter;
+                    return {
+                        x: d.sources_with_brand || 0,
+                        y: y,
+                        mentioned: d.brand_in_response,
+                        totalSources: d.total_sources
+                    };
+                });
+                
+                chartInstances.scatter = new Chart(canvas, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Records',
+                            data: scatterData,
+                            backgroundColor: scatterData.map(d => d.mentioned ? 'rgba(0, 255, 136, 0.6)' : 'rgba(255, 136, 68, 0.6)'),
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const d = context.raw;
+                                        return `Sources with Brand: ${d.x}, Total: ${d.totalSources}, ${d.mentioned ? 'Mentioned' : 'Not Mentioned'}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                title: { display: true, text: '# of Sources with Brand (COUNT)', color: '#8888aa' },
+                                ticks: { color: '#8888aa' }, 
+                                grid: { color: '#2a2a3a' },
+                                min: 0
+                            },
+                            y: { 
+                                title: { display: true, text: 'Brand in Response', color: '#8888aa' },
+                                ticks: { 
+                                    color: '#8888aa',
+                                    callback: function(value) {
+                                        if (value >= 0 && value < 1) return 'No';
+                                        if (value >= 1 && value <= 2) return 'Yes';
+                                        return '';
+                                    }
+                                }, 
+                                grid: { color: '#2a2a3a' },
+                                min: 0,
+                                max: 2
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Percentage scatter chart with jittered Y values
+                const scatterData = allData.slice(0, 500).map(d => {
+                    // Spread dots vertically: 0 to 0.9 for not mentioned, 1.1 to 2 for mentioned
+                    const jitter = Math.random() * 0.8;
+                    const y = d.brand_in_response ? 1.1 + jitter : 0.1 + jitter;
+                    return {
+                        x: d.brand_mention_percentage || 0,
+                        y: y,
+                        mentioned: d.brand_in_response
+                    };
+                });
+                
+                chartInstances.scatter = new Chart(canvas, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Records',
+                            data: scatterData,
+                            backgroundColor: scatterData.map(d => d.mentioned ? 'rgba(0, 255, 136, 0.6)' : 'rgba(255, 136, 68, 0.6)'),
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const d = context.raw;
+                                        return `Brand %: ${d.x.toFixed(1)}%, ${d.mentioned ? 'Mentioned' : 'Not Mentioned'}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                title: { display: true, text: 'Brand Mention % in Sources', color: '#8888aa' },
+                                ticks: { color: '#8888aa' }, 
+                                grid: { color: '#2a2a3a' },
+                                min: 0,
+                                max: 100
+                            },
+                            y: { 
+                                title: { display: true, text: 'Brand in Response', color: '#8888aa' },
+                                ticks: { 
+                                    color: '#8888aa',
+                                    callback: function(value) {
+                                        if (value >= 0 && value < 1) return 'No';
+                                        if (value >= 1 && value <= 2) return 'Yes';
+                                        return '';
+                                    }
+                                }, 
+                                grid: { color: '#2a2a3a' },
+                                min: 0,
+                                max: 2
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Load data from JSON files
+        async function loadData() {
+            try {
+                // Load summary (only records WITH sources)
+                const summaryResponse = await fetch('output/summary_20260110_205039.json');
+                summary = await summaryResponse.json();
+                
+                // Load full data (only records WITH sources)
+                const dataResponse = await fetch('output/correlation_data_20260110_205039.json');
+                allData = await dataResponse.json();
+                filteredData = [...allData];
+                
+                // Group by execution
+                groupByExecution();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                renderStats();
+                renderFindings();
+                renderCharts();
+                renderTable();
+                
+                document.getElementById('totalRecords').textContent = summary.total_records.toLocaleString();
+                document.getElementById('dataDate').textContent = new Date().toLocaleDateString();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p style="color: var(--accent-red);">Error loading data. Make sure the output files exist.</p>
+                    <p style="margin-top: 1rem;">Run: <code style="background: var(--bg-tertiary); padding: 0.5rem; border-radius: 4px;">python3 fetch_correlation_data.py</code></p>
+                `;
+            }
+        }
+        
+        function renderStats() {
+            const stats = [
+                {
+                    label: 'Total Records (with sources)',
+                    value: summary.total_records.toLocaleString(),
+                    color: 'blue',
+                    comparison: 'Excludes records without sources'
+                },
+                {
+                    label: 'Brand in Response',
+                    value: summary.records_with_brand_in_response.toLocaleString(),
+                    color: 'green',
+                    comparison: `${(summary.records_with_brand_in_response / summary.total_records * 100).toFixed(1)}% of total`
+                },
+                {
+                    label: 'Avg # Sources with Brand (Mentioned)',
+                    value: summary.avg_brand_sources_when_mentioned.toFixed(1),
+                    color: 'green',
+                    comparison: `<span class="multiplier">${(summary.avg_brand_sources_when_mentioned / summary.avg_brand_sources_when_not_mentioned).toFixed(1)}x</span> more than when not mentioned`,
+                    highlight: true
+                },
+                {
+                    label: 'Avg # Sources with Brand (Not Mentioned)',
+                    value: summary.avg_brand_sources_when_not_mentioned.toFixed(1),
+                    color: 'orange',
+                    comparison: null
+                },
+                {
+                    label: 'Avg Brand Source % (Mentioned)',
+                    value: summary.avg_brand_pct_when_mentioned.toFixed(1) + '%',
+                    color: 'green',
+                    comparison: `<span class="multiplier">${(summary.avg_brand_pct_when_mentioned / summary.avg_brand_pct_when_not_mentioned).toFixed(1)}x</span> higher than when not mentioned`,
+                    highlight: true
+                },
+                {
+                    label: 'Avg Brand Source % (Not Mentioned)',
+                    value: summary.avg_brand_pct_when_not_mentioned.toFixed(1) + '%',
+                    color: 'orange',
+                    comparison: null
+                }
+            ];
+            
+            const grid = document.getElementById('statsGrid');
+            grid.innerHTML = stats.map(stat => `
+                <div class="stat-card ${stat.highlight ? 'highlight' : ''}">
+                    <div class="stat-label">${stat.label}</div>
+                    <div class="stat-value ${stat.color}">${stat.value}</div>
+                    ${stat.comparison ? `<div class="stat-comparison">${stat.comparison}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function renderFindings() {
+            const multiplierSources = (summary.avg_sources_when_mentioned / summary.avg_sources_when_not_mentioned).toFixed(1);
+            const multiplierBrandSources = (summary.avg_brand_sources_when_mentioned / summary.avg_brand_sources_when_not_mentioned).toFixed(1);
+            const multiplierPct = (summary.avg_brand_pct_when_mentioned / summary.avg_brand_pct_when_not_mentioned).toFixed(1);
+            
+            const findings = [
+                {
+                    icon: '📈',
+                    text: `When brand IS mentioned in response, there are <strong>${multiplierSources}x more sources</strong> on average (${summary.avg_sources_when_mentioned.toFixed(1)} vs ${summary.avg_sources_when_not_mentioned.toFixed(1)})`
+                },
+                {
+                    icon: '🎯',
+                    text: `When brand IS mentioned in response, <strong>${multiplierBrandSources}x more sources cite the brand</strong> (${summary.avg_brand_sources_when_mentioned.toFixed(1)} vs ${summary.avg_brand_sources_when_not_mentioned.toFixed(1)})`
+                },
+                {
+                    icon: '📊',
+                    text: `The percentage of sources mentioning the brand is <strong>${multiplierPct}x higher</strong> when brand appears in response (${summary.avg_brand_pct_when_mentioned.toFixed(1)}% vs ${summary.avg_brand_pct_when_not_mentioned.toFixed(1)}%)`
+                },
+                {
+                    icon: '✅',
+                    text: `<strong>Conclusion:</strong> There is a strong positive correlation between source citations mentioning the brand and the brand appearing in the final response.`
+                }
+            ];
+            
+            document.getElementById('findings').innerHTML = findings.map(f => `
+                <div class="finding-item">
+                    <span class="finding-icon">${f.icon}</span>
+                    <div class="finding-text">${f.text}</div>
+                </div>
+            `).join('');
+        }
+        
+        function renderCharts() {
+            // Destroy existing charts
+            Object.values(chartInstances).forEach(chart => {
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
+                }
+            });
+            chartInstances = {};
+            
+            // Sources comparison chart
+            chartInstances.sources = new Chart(document.getElementById('sourcesChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Avg Total Sources', 'Avg Sources with Brand'],
+                    datasets: [
+                        {
+                            label: 'Brand in Response',
+                            data: [summary.avg_sources_when_mentioned, summary.avg_brand_sources_when_mentioned],
+                            backgroundColor: 'rgba(0, 255, 136, 0.7)',
+                            borderColor: '#00ff88',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Brand NOT in Response',
+                            data: [summary.avg_sources_when_not_mentioned, summary.avg_brand_sources_when_not_mentioned],
+                            backgroundColor: 'rgba(255, 136, 68, 0.7)',
+                            borderColor: '#ff8844',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8888aa' }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#8888aa' }, grid: { color: '#2a2a3a' } },
+                        y: { ticks: { color: '#8888aa' }, grid: { color: '#2a2a3a' } }
+                    }
+                }
+            });
+            
+            // Percentage chart
+            chartInstances.percentage = new Chart(document.getElementById('percentageChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Brand in Response', 'Brand NOT in Response'],
+                    datasets: [{
+                        label: 'Average % of Sources with Brand',
+                        data: [summary.avg_brand_pct_when_mentioned, summary.avg_brand_pct_when_not_mentioned],
+                        backgroundColor: ['rgba(0, 255, 136, 0.7)', 'rgba(255, 136, 68, 0.7)'],
+                        borderColor: ['#00ff88', '#ff8844'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#8888aa' }, grid: { color: '#2a2a3a' } },
+                        y: { 
+                            ticks: { color: '#8888aa', callback: v => v + '%' }, 
+                            grid: { color: '#2a2a3a' },
+                            max: 40
+                        }
+                    }
+                }
+            });
+            
+            // Render distribution chart (scatter or bar based on current view)
+            renderDistributionChart();
+            
+            // Pie chart
+            chartInstances.pie = new Chart(document.getElementById('pieChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Brand in Response', 'Brand NOT in Response'],
+                    datasets: [{
+                        data: [summary.records_with_brand_in_response, summary.records_without_brand_in_response],
+                        backgroundColor: ['rgba(0, 255, 136, 0.7)', 'rgba(255, 136, 68, 0.7)'],
+                        borderColor: ['#00ff88', '#ff8844'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#8888aa' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderTable() {
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+            
+            if (viewMode === 'executions') {
+                // Render by executions
+                thead.innerHTML = `
+                    <tr>
+                        <th>Execution ID</th>
+                        <th>Query Group</th>
+                        <th>Total Queries</th>
+                        <th>Queries with Brand</th>
+                        <th>Total Sources</th>
+                        <th>Sources with Brand</th>
+                        <th>Brand Source %</th>
+                        <th>Details</th>
+                    </tr>
+                `;
+                
+                const execList = Object.values(executionGroups);
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+                const pageData = execList.slice(start, end);
+                
+                let html = '';
+                for (const exec of pageData) {
+                    const brandPct = exec.total_sources > 0 ? (exec.sources_with_brand / exec.total_sources * 100) : 0;
+                    const isExpanded = expandedExecutions.has(exec.execution_id);
+                    
+                    html += `
+                        <tr class="execution-row ${isExpanded ? 'expanded' : ''}" onclick="toggleExecution(${exec.execution_id})">
+                            <td><strong>#${exec.execution_id}</strong></td>
+                            <td>${exec.query_group_id}</td>
+                            <td>${exec.total_queries}</td>
+                            <td>
+                                <span class="badge ${exec.queries_with_brand > 0 ? 'badge-yes' : 'badge-no'}">
+                                    ${exec.queries_with_brand} / ${exec.total_queries}
+                                </span>
+                            </td>
+                            <td>${exec.total_sources}</td>
+                            <td>${exec.sources_with_brand}</td>
+                            <td>
+                                <span class="percentage-bar"><span class="percentage-fill" style="width: ${Math.min(brandPct, 100)}%"></span></span>
+                                ${brandPct.toFixed(1)}%
+                            </td>
+                            <td>
+                                <button class="view-sources-btn" onclick="event.stopPropagation(); toggleExecution(${exec.execution_id})">
+                                    ${isExpanded ? '▼ Hide' : '▶ Show'} ${exec.records.length} queries
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    if (isExpanded) {
+                        html += `
+                            <tr class="query-executions-row">
+                                <td colspan="8">
+                                    <div class="query-executions-container">
+                                        <h4 style="margin-bottom: 1rem; color: var(--accent-blue);">Query Executions for Execution #${exec.execution_id}</h4>
+                                        ${exec.records.map(r => `
+                                            <div class="query-execution-item">
+                                                <span class="query-id">Q#${r.query_id}</span>
+                                                <span class="brand-status">
+                                                    <span class="badge ${r.brand_in_response ? 'badge-yes' : 'badge-no'}">
+                                                        ${r.brand_in_response ? '✓ Brand in Response' : '✗ Not Mentioned'}
+                                                    </span>
+                                                </span>
+                                                <span class="sources-info">
+                                                    <span>Sources: ${r.total_sources}</span>
+                                                    <span>With Brand: ${r.sources_with_brand}</span>
+                                                    <span>
+                                                        <span class="percentage-bar" style="width: 60px;"><span class="percentage-fill" style="width: ${Math.min(r.brand_mention_percentage, 100)}%"></span></span>
+                                                        ${r.brand_mention_percentage.toFixed(1)}%
+                                                    </span>
+                                                </span>
+                                                ${r.sources_summary && r.sources_summary.length > 0 
+                                                    ? `<button class="view-sources-btn" onclick="event.stopPropagation(); showSources(${r.id})">Sources</button>`
+                                                    : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }
+                tbody.innerHTML = html;
+                
+                const totalPages = Math.ceil(execList.length / pageSize);
+                document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages} (${execList.length} executions)`;
+                document.getElementById('prevBtn').disabled = currentPage === 1;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+                
+            } else {
+                // Render by records (original view)
+                thead.innerHTML = `
+                    <tr>
+                        <th onclick="sortTable('id')">ID ↕</th>
+                        <th onclick="sortTable('query_group_id')">Query Group ↕</th>
+                        <th onclick="sortTable('execution_id')">Execution ↕</th>
+                        <th onclick="sortTable('brand_in_response')">Brand in Response ↕</th>
+                        <th onclick="sortTable('total_sources')">Total Sources ↕</th>
+                        <th onclick="sortTable('sources_with_brand')">Sources with Brand ↕</th>
+                        <th onclick="sortTable('brand_mention_percentage')">Brand % ↕</th>
+                        <th>Details</th>
+                    </tr>
+                `;
+                
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+                const pageData = filteredData.slice(start, end);
+                
+                tbody.innerHTML = pageData.map(row => `
+                    <tr>
+                        <td>${row.id}</td>
+                        <td>${row.query_group_id}</td>
+                        <td>${row.execution_id}</td>
+                        <td><span class="badge ${row.brand_in_response ? 'badge-yes' : 'badge-no'}">${row.brand_in_response ? 'Yes' : 'No'}</span></td>
+                        <td>${row.total_sources}</td>
+                        <td>${row.sources_with_brand}</td>
+                        <td>
+                            <span class="percentage-bar"><span class="percentage-fill" style="width: ${Math.min(row.brand_mention_percentage, 100)}%"></span></span>
+                            ${row.brand_mention_percentage.toFixed(1)}%
+                        </td>
+                        <td>
+                            ${row.sources_summary && row.sources_summary.length > 0 
+                                ? `<button class="view-sources-btn" onclick="showSources(${row.id})">View ${row.sources_summary.length} sources</button>`
+                                : '<span style="color: var(--text-secondary)">No sources</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+                
+                const totalPages = Math.ceil(filteredData.length / pageSize);
+                document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages} (${filteredData.length} records)`;
+                document.getElementById('prevBtn').disabled = currentPage === 1;
+                document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+            }
+        }
+        
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'desc';
+            }
+            
+            filteredData.sort((a, b) => {
+                const aVal = a[column];
+                const bVal = b[column];
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+            
+            currentPage = 1;
+            renderTable();
+        }
+        
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+        
+        function nextPage() {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        }
+        
+        function showSources(recordId) {
+            const record = allData.find(r => r.id === recordId);
+            if (!record || !record.sources_summary) return;
+            
+            document.getElementById('modalRecordId').textContent = recordId;
+            document.getElementById('modalBody').innerHTML = record.sources_summary.map(s => `
+                <div class="source-item">
+                    <span class="${s.is_customer_mentioned ? 'mentioned' : 'not-mentioned'}">
+                        ${s.is_customer_mentioned ? '✓' : '✗'}
+                    </span>
+                    <a href="${s.url}" target="_blank" class="source-url">${s.domain || s.url}</a>
+                </div>
+            `).join('');
+            
+            document.getElementById('modal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        
+        // Filter handling
+        document.getElementById('filterSelect').addEventListener('change', function() {
+            const filter = this.value;
+            
+            switch (filter) {
+                case 'mentioned':
+                    filteredData = allData.filter(r => r.brand_in_response);
+                    break;
+                case 'not_mentioned':
+                    filteredData = allData.filter(r => !r.brand_in_response);
+                    break;
+                case 'has_sources':
+                    filteredData = allData.filter(r => r.total_sources > 0);
+                    break;
+                case 'high_percentage':
+                    filteredData = allData.filter(r => r.brand_mention_percentage > 30);
+                    break;
+                default:
+                    filteredData = [...allData];
+            }
+            
+            currentPage = 1;
+            renderTable();
+        });
+        
+        // Search handling
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            
+            if (!query) {
+                filteredData = [...allData];
+            } else {
+                filteredData = allData.filter(r => 
+                    String(r.id).includes(query) ||
+                    String(r.query_group_id).includes(query) ||
+                    String(r.execution_id).includes(query)
+                );
+            }
+            
+            currentPage = 1;
+            renderTable();
+        });
+        
+        // Close modal on overlay click
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        
+        // Load data on page load
+        loadData();
+    </script>
+</body>
+</html>

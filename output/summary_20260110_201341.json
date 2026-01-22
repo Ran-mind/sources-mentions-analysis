@@ -1,0 +1,13 @@
+{
+  "total_records": 5000,
+  "records_with_brand_in_response": 554,
+  "records_without_brand_in_response": 4446,
+  "records_with_sources": 1723,
+  "records_without_sources": 3277,
+  "avg_sources_when_mentioned": 25.644404332129962,
+  "avg_sources_when_not_mentioned": 6.585245164192533,
+  "avg_brand_sources_when_mentioned": 8.626353790613718,
+  "avg_brand_sources_when_not_mentioned": 0.7658569500674763,
+  "avg_brand_pct_when_mentioned": 30.9386673002203,
+  "avg_brand_pct_when_not_mentioned": 10.201101127611787
+}
