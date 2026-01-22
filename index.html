@@ -597,7 +597,7 @@
                 <p style="color: var(--text-secondary); margin-bottom: 1rem;">Choose data source:</p>
                 <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
                     <button id="lastExecutionsBtn" onclick="loadLastExecutions()" style="background: var(--accent-blue); border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-                        📊 Load Recent Data
+                        📊 Last 100 Executions
                     </button>
                     <span style="color: var(--text-secondary);">or</span>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -1216,25 +1216,59 @@
             document.getElementById('content').style.display = 'block';
         }
         
-        // Load recent query executions
+        // Load last 100 completed executions
         async function loadLastExecutions() {
             const customerInfo = document.getElementById('customerInfo');
             customerInfo.innerHTML = '';
-            showLoading('Loading recent query executions...');
+            showLoading('Fetching last 100 completed executions...');
             
             try {
-                // Fetch recent query_executions (limit to prevent Netlify function timeout)
-                const allQueryExecutions = await apiCall('get-by', {
-                    tableName: 'queries_execution',
+                // Step 1: Get last 100 completed executions
+                const executions = await apiCall('get-by', {
+                    tableName: 'executions',
+                    status: 'completed',
                     is_deleted: 0,
                     orderBy: 'id',
                     order: 'desc',
-                    limit: 500
+                    limit: 100
                 });
                 
-                if (!allQueryExecutions || allQueryExecutions.length === 0) {
+                if (!executions || executions.length === 0) {
                     document.getElementById('loading').innerHTML = `
-                        <p style="color: var(--accent-orange);">No query executions found</p>
+                        <p style="color: var(--accent-orange);">No completed executions found</p>
+                    `;
+                    return;
+                }
+                
+                const executionCount = executions.length;
+                let allQueryExecutions = [];
+                
+                // Step 2: Fetch query_executions for each execution (in batches)
+                for (let i = 0; i < executions.length; i += 5) {
+                    const batch = executions.slice(i, i + 5);
+                    showLoading(`Loading executions ${i + 1}-${Math.min(i + 5, executionCount)} of ${executionCount}...`);
+                    
+                    // Fetch in parallel for speed
+                    const batchPromises = batch.map(exec => 
+                        apiCall('get-by', {
+                            tableName: 'queries_execution',
+                            execution_id: exec.id,
+                            is_deleted: 0,
+                            limit: 500
+                        })
+                    );
+                    
+                    const batchResults = await Promise.all(batchPromises);
+                    for (const qes of batchResults) {
+                        if (qes && Array.isArray(qes) && qes.length > 0) {
+                            allQueryExecutions = allQueryExecutions.concat(qes);
+                        }
+                    }
+                }
+                
+                if (allQueryExecutions.length === 0) {
+                    document.getElementById('loading').innerHTML = `
+                        <p style="color: var(--accent-orange);">No query executions found in the last ${executionCount} executions</p>
                     `;
                     return;
                 }
@@ -1295,7 +1329,7 @@
                 
                 // Count unique executions
                 const uniqueExecutions = new Set(processedData.map(r => r.execution_id)).size;
-                customerInfo.innerHTML = `<span style="color: var(--accent-blue);">✓ Loaded ${processedData.length} records from ${uniqueExecutions} executions</span>`;
+                customerInfo.innerHTML = `<span style="color: var(--accent-blue);">✓ Loaded ${processedData.length} records from last ${uniqueExecutions} completed executions</span>`;
                 document.getElementById('totalRecords').textContent = summary.total_records.toLocaleString();
                 document.getElementById('dataDate').textContent = new Date().toLocaleDateString();
                 
