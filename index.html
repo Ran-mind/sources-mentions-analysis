@@ -117,6 +117,79 @@
             font-style: italic;
         }
         
+        .stat-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        
+        .tooltip-icon {
+            width: 16px;
+            height: 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--text-secondary);
+            cursor: help;
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        .tooltip-icon:hover {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+        
+        .tooltip-icon .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            text-align: left;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            transition: opacity 0.2s, visibility 0.2s;
+            margin-bottom: 8px;
+        }
+        
+        .tooltip-icon .tooltip-text::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: var(--border-color) transparent transparent transparent;
+        }
+        
+        .tooltip-icon:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .tooltip-text strong {
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 4px;
+        }
+        
         .stat-value {
             font-size: 2.5rem;
             font-weight: 700;
@@ -480,14 +553,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
         .view-sources-btn {
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
@@ -719,9 +784,6 @@
             </div>
         </div>
         
-        <footer>
-            <p>Research conducted on <span id="dataDate"></span> • Total records: <span id="totalRecords"></span></p>
-        </footer>
     </div>
     
     <!-- Source Details Modal -->
@@ -914,8 +976,6 @@
                 renderTable();
                 
                 customerInfo.innerHTML = `<span style="color: var(--accent-green);">✓ Loaded ${customerName} - Execution #${latestExecutionId} (${processedData.length} records with sources)</span>`;
-                document.getElementById('totalRecords').textContent = summary.total_records.toLocaleString();
-                document.getElementById('dataDate').textContent = new Date().toLocaleDateString();
                 
             } catch (error) {
                 console.error('Error loading customer data:', error);
@@ -1337,8 +1397,6 @@
                 // Count unique executions
                 const uniqueExecutions = new Set(processedData.map(r => r.execution_id)).size;
                 customerInfo.innerHTML = `<span style="color: var(--accent-blue);">✓ Loaded ${processedData.length} records from last ${uniqueExecutions} completed executions</span>`;
-                document.getElementById('totalRecords').textContent = summary.total_records.toLocaleString();
-                document.getElementById('dataDate').textContent = new Date().toLocaleDateString();
                 
             } catch (error) {
                 console.error('Error loading executions:', error);
@@ -1358,43 +1416,97 @@
                 {
                     label: 'Total Queries (with sources)',
                     value: summary.total_records.toLocaleString(),
-                    color: 'blue'
+                    color: 'blue',
+                    tooltip: `<strong>Total Queries with Sources</strong>
+                        Count of all query executions that have at least one source/citation in the response.
+                        <br><br>
+                        <strong>Process:</strong><br>
+                        1. Fetch query_execution records from the database<br>
+                        2. Parse the "resources" JSON field to extract sources<br>
+                        3. Filter out records where sources array is empty<br>
+                        4. Count the remaining records`
                 },
                 {
                     label: 'Customer Mentioned in Response',
                     value: mentionedPct + '%',
-                    color: 'green'
+                    color: 'green',
+                    tooltip: `<strong>Brand Mention Rate</strong>
+                        Percentage of queries where the customer's brand was mentioned in the AI response.
+                        <br><br>
+                        <strong>Calculation:</strong><br>
+                        (Records with product_in_results = true) ÷ (Total records with sources) × 100
+                        <br><br>
+                        <strong>Data source:</strong> product_in_results field in query_execution table`
                 },
                 {
                     label: 'Avg # Sources Mentioning Brand',
                     sublabel: 'When brand IS in response',
                     value: summary.avg_brand_sources_when_mentioned.toFixed(1),
-                    color: 'green'
+                    color: 'green',
+                    tooltip: `<strong>Average Brand Source Count (Mentioned)</strong>
+                        When the brand IS mentioned in the AI response, how many sources on average also mention the brand?
+                        <br><br>
+                        <strong>Calculation:</strong><br>
+                        1. Filter records where product_in_results = true<br>
+                        2. For each record, count sources where is_customer_mentioned = true<br>
+                        3. Sum all counts ÷ number of records
+                        <br><br>
+                        <strong>Data source:</strong> resources[].is_customer_mentioned field`
                 },
                 {
                     label: 'Avg % Sources Mentioning Brand',
                     sublabel: 'When brand IS in response',
                     value: summary.avg_brand_pct_when_mentioned.toFixed(1) + '%',
-                    color: 'green'
+                    color: 'green',
+                    tooltip: `<strong>Average Brand Source Percentage (Mentioned)</strong>
+                        When the brand IS mentioned in the AI response, what percentage of sources on average also mention the brand?
+                        <br><br>
+                        <strong>Calculation:</strong><br>
+                        1. Filter records where product_in_results = true<br>
+                        2. For each record: (sources with brand ÷ total sources) × 100<br>
+                        3. Average all percentages
+                        <br><br>
+                        <strong>Formula:</strong> Σ(brand_sources/total_sources × 100) ÷ record_count`
                 },
                 {
                     label: 'Avg # Sources Mentioning Brand',
                     sublabel: 'When brand is NOT in response',
                     value: summary.avg_brand_sources_when_not_mentioned.toFixed(1),
-                    color: 'orange'
+                    color: 'orange',
+                    tooltip: `<strong>Average Brand Source Count (Not Mentioned)</strong>
+                        When the brand is NOT mentioned in the AI response, how many sources on average still mention the brand?
+                        <br><br>
+                        <strong>Calculation:</strong><br>
+                        1. Filter records where product_in_results = false<br>
+                        2. For each record, count sources where is_customer_mentioned = true<br>
+                        3. Sum all counts ÷ number of records
+                        <br><br>
+                        <strong>Insight:</strong> Lower values suggest sources mentioning brand correlate with response mentions`
                 },
                 {
                     label: 'Avg % Sources Mentioning Brand',
                     sublabel: 'When brand is NOT in response',
                     value: summary.avg_brand_pct_when_not_mentioned.toFixed(1) + '%',
-                    color: 'orange'
+                    color: 'orange',
+                    tooltip: `<strong>Average Brand Source Percentage (Not Mentioned)</strong>
+                        When the brand is NOT mentioned in the AI response, what percentage of sources on average mention the brand?
+                        <br><br>
+                        <strong>Calculation:</strong><br>
+                        1. Filter records where product_in_results = false<br>
+                        2. For each record: (sources with brand ÷ total sources) × 100<br>
+                        3. Average all percentages
+                        <br><br>
+                        <strong>Compare with:</strong> The "IS in response" value to see correlation strength`
                 }
             ];
             
             const grid = document.getElementById('statsGrid');
             grid.innerHTML = stats.map(stat => `
                 <div class="stat-card">
-                    <div class="stat-label">${stat.label}</div>
+                    <div class="stat-header">
+                        <div class="stat-label">${stat.label}</div>
+                        <div class="tooltip-icon">?<span class="tooltip-text">${stat.tooltip}</span></div>
+                    </div>
                     ${stat.sublabel ? `<div class="stat-sublabel">${stat.sublabel}</div>` : ''}
                     <div class="stat-value ${stat.color}">${stat.value}</div>
                 </div>
