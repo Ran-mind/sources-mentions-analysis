@@ -584,21 +584,26 @@
                 <p>Is there a correlation between the number/percentage of query sources (citations) where the brand is mentioned and whether the brand was mentioned in the query response?</p>
             </div>
             
-            <div class="customer-lookup" style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <label for="customerIdInput" style="color: var(--text-secondary);">Customer ID:</label>
-                    <input type="number" id="customerIdInput" class="search-input" placeholder="Enter Customer ID" style="width: 150px;">
-                    <button id="loadCustomerBtn" onclick="loadCustomerData()" style="background: var(--accent-purple); border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600;">
-                        Load Customer Data
+            <div class="data-source-selector" style="margin-top: 1.5rem;">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Choose data source:</p>
+                <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                    <button id="lastExecutionsBtn" onclick="loadLastExecutions()" style="background: var(--accent-blue); border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                        📊 Last 100 Executions
                     </button>
+                    <span style="color: var(--text-secondary);">or</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="number" id="customerIdInput" class="search-input" placeholder="Customer ID" style="width: 120px;">
+                        <button id="loadCustomerBtn" onclick="loadCustomerData()" style="background: var(--accent-purple); border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600;">
+                            🔍 Load Customer
+                        </button>
+                    </div>
                 </div>
-                <div id="customerInfo" style="color: var(--accent-green); font-weight: 500;"></div>
+                <div id="customerInfo" style="color: var(--accent-green); font-weight: 500; margin-top: 1rem;"></div>
             </div>
         </header>
         
         <div id="loading" class="loading">
-            <div class="loading-spinner"></div>
-            <p>Loading data...</p>
+            <p style="font-size: 1.2rem; color: var(--text-secondary);">👆 Select a data source above to begin analysis</p>
         </div>
         
         <div id="content" style="display: none;">
@@ -768,7 +773,8 @@
             }
             
             const customerInfo = document.getElementById('customerInfo');
-            customerInfo.innerHTML = '<span class="customer-loading">Loading customer data...</span>';
+            customerInfo.innerHTML = '';
+            showLoading(`Loading data for customer ${customerId}...`);
             
             try {
                 // Step 1: Get customer info
@@ -777,7 +783,7 @@
                 console.log('Customer result:', customer);
                 
                 if (!customer || customer.message || !customer.id) {
-                    customerInfo.innerHTML = `<span style="color: var(--accent-red);">Customer ${customerId} not found</span>`;
+                    document.getElementById('loading').innerHTML = `<p style="color: var(--accent-red);">Customer ${customerId} not found</p>`;
                     return;
                 }
                 
@@ -792,7 +798,7 @@
                 console.log('Query group relations:', queryGroupRels);
                 
                 if (!queryGroupRels || queryGroupRels.length === 0) {
-                    customerInfo.innerHTML = `<span style="color: var(--accent-orange);">No query groups found for ${customerName}</span>`;
+                    document.getElementById('loading').innerHTML = `<p style="color: var(--accent-orange);">No query groups found for ${customerName}</p>`;
                     return;
                 }
                 
@@ -822,7 +828,7 @@
                 }
                 
                 if (!latestExecutionId) {
-                    customerInfo.innerHTML = `<span style="color: var(--accent-orange);">No executions found for ${customerName}</span>`;
+                    document.getElementById('loading').innerHTML = `<p style="color: var(--accent-orange);">No executions found for ${customerName}</p>`;
                     return;
                 }
                 
@@ -835,7 +841,7 @@
                 });
                 
                 if (!queryExecutions || queryExecutions.length === 0) {
-                    customerInfo.innerHTML = `<span style="color: var(--accent-orange);">No query executions found for execution ${latestExecutionId}</span>`;
+                    document.getElementById('loading').innerHTML = `<p style="color: var(--accent-orange);">No query executions found for execution ${latestExecutionId}</p>`;
                     return;
                 }
                 
@@ -866,7 +872,7 @@
                 }
                 
                 if (processedData.length === 0) {
-                    customerInfo.innerHTML = `<span style="color: var(--accent-orange);">No records with sources found</span>`;
+                    document.getElementById('loading').innerHTML = `<p style="color: var(--accent-orange);">No records with sources found for this customer</p>`;
                     return;
                 }
                 
@@ -881,6 +887,10 @@
                 // Group by execution
                 groupByExecution();
                 
+                // Show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
                 // Re-render everything
                 renderStats();
                 renderFindings();
@@ -889,14 +899,14 @@
                 
                 customerInfo.innerHTML = `<span style="color: var(--accent-green);">✓ Loaded ${customerName} - Execution #${latestExecutionId} (${processedData.length} records with sources)</span>`;
                 document.getElementById('totalRecords').textContent = summary.total_records.toLocaleString();
+                document.getElementById('dataDate').textContent = new Date().toLocaleDateString();
                 
             } catch (error) {
                 console.error('Error loading customer data:', error);
-                if (error.message === 'Failed to fetch') {
-                    customerInfo.innerHTML = `<span style="color: var(--accent-red);">Connection Error: Make sure the server is running (python3 server.py)</span>`;
-                } else {
-                    customerInfo.innerHTML = `<span style="color: var(--accent-red);">Error: ${error.message}</span>`;
-                }
+                document.getElementById('loading').innerHTML = `
+                    <p style="color: var(--accent-red);">Error: ${error.message}</p>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Check console for details</p>
+                `;
             }
         }
         
@@ -1180,37 +1190,132 @@
             }
         }
         
-        // Load data from JSON files
-        async function loadData() {
+        // Show loading state
+        function showLoading(message = 'Loading data...') {
+            document.getElementById('loading').innerHTML = `
+                <div class="loading-spinner"></div>
+                <p>${message}</p>
+            `;
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('content').style.display = 'none';
+        }
+        
+        // Load last 100 completed executions
+        async function loadLastExecutions() {
+            const customerInfo = document.getElementById('customerInfo');
+            customerInfo.innerHTML = '';
+            showLoading('Loading last 100 executions...');
+            
             try {
-                // Load summary (only records WITH sources)
-                const summaryResponse = await fetch('output/summary_20260110_205039.json');
-                summary = await summaryResponse.json();
+                // Step 1: Get last 100 completed executions
+                const executions = await apiCall('get-by', {
+                    tableName: 'v_executions',
+                    status: 'completed',
+                    orderBy: 'id',
+                    order: 'desc',
+                    limit: 100
+                });
                 
-                // Load full data (only records WITH sources)
-                const dataResponse = await fetch('output/correlation_data_20260110_205039.json');
-                allData = await dataResponse.json();
+                if (!executions || executions.length === 0) {
+                    document.getElementById('loading').innerHTML = `
+                        <p style="color: var(--accent-red);">No completed executions found</p>
+                    `;
+                    return;
+                }
+                
+                // Step 2: Get query_executions for these executions
+                const executionIds = executions.map(e => e.id);
+                let allQueryExecutions = [];
+                
+                // Fetch in batches to avoid timeout
+                for (let i = 0; i < executionIds.length; i += 10) {
+                    const batch = executionIds.slice(i, i + 10);
+                    showLoading(`Loading executions ${i + 1}-${Math.min(i + 10, executionIds.length)} of ${executionIds.length}...`);
+                    
+                    for (const execId of batch) {
+                        const qes = await apiCall('get-by', {
+                            tableName: 'queries_execution',
+                            execution_id: execId,
+                            is_deleted: 0,
+                            limit: 1000
+                        });
+                        if (qes && qes.length > 0) {
+                            allQueryExecutions = allQueryExecutions.concat(qes);
+                        }
+                    }
+                }
+                
+                if (allQueryExecutions.length === 0) {
+                    document.getElementById('loading').innerHTML = `
+                        <p style="color: var(--accent-orange);">No query executions found</p>
+                    `;
+                    return;
+                }
+                
+                // Step 3: Process data (filter records with sources and calculate metrics)
+                showLoading('Processing data...');
+                const processedData = [];
+                for (const qe of allQueryExecutions) {
+                    const resources = parseResources(qe.resources);
+                    if (resources.length === 0) continue;
+                    
+                    const sourcesWithBrand = resources.filter(r => r.is_customer_mentioned === true).length;
+                    const brandPct = resources.length > 0 ? (sourcesWithBrand / resources.length) * 100 : 0;
+                    
+                    processedData.push({
+                        id: qe.id,
+                        query_id: qe.query_id,
+                        query_group_id: qe.query_group_id,
+                        execution_id: qe.execution_id,
+                        brand_in_response: qe.product_in_results === 1 || qe.product_in_results === true,
+                        total_sources: resources.length,
+                        sources_with_brand: sourcesWithBrand,
+                        brand_mention_percentage: brandPct,
+                        sources_summary: resources.map(r => ({
+                            url: r.url || '',
+                            domain: r.Domain || '',
+                            is_customer_mentioned: r.is_customer_mentioned || false
+                        }))
+                    });
+                }
+                
+                if (processedData.length === 0) {
+                    document.getElementById('loading').innerHTML = `
+                        <p style="color: var(--accent-orange);">No records with sources found</p>
+                    `;
+                    return;
+                }
+                
+                // Update global data
+                allData = processedData;
                 filteredData = [...allData];
+                currentCustomerId = null;
+                
+                // Recalculate summary
+                summary = calculateSummary(processedData);
                 
                 // Group by execution
                 groupByExecution();
                 
+                // Show content
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
                 
+                // Render everything
                 renderStats();
                 renderFindings();
                 renderCharts();
                 renderTable();
                 
+                customerInfo.innerHTML = `<span style="color: var(--accent-blue);">✓ Loaded last ${executionIds.length} executions (${processedData.length} records with sources)</span>`;
                 document.getElementById('totalRecords').textContent = summary.total_records.toLocaleString();
                 document.getElementById('dataDate').textContent = new Date().toLocaleDateString();
                 
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('Error loading executions:', error);
                 document.getElementById('loading').innerHTML = `
-                    <p style="color: var(--accent-red);">Error loading data. Make sure the output files exist.</p>
-                    <p style="margin-top: 1rem;">Run: <code style="background: var(--bg-tertiary); padding: 0.5rem; border-radius: 4px;">python3 fetch_correlation_data.py</code></p>
+                    <p style="color: var(--accent-red);">Error: ${error.message}</p>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Check console for details</p>
                 `;
             }
         }
@@ -1648,8 +1753,7 @@
             if (e.target === this) closeModal();
         });
         
-        // Load data on page load
-        loadData();
+        // Page initialized - user must select a data source
     </script>
 </body>
 </html>
